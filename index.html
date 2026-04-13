@@ -258,6 +258,7 @@ header {
   </div>
   <div class="hdr-right">
     <div class="live-tag">LIVE<strong>SCORECARD</strong></div>
+    <div id="sync-status" style="font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:1px;color:rgba(255,255,255,0.5);min-width:80px;text-align:right"></div>
     <button class="reset-btn" onclick="resetAll()">↺ RESET</button>
   </div>
 </header>
@@ -553,21 +554,66 @@ function switchTab(tab) {
   if (tab==='dashboard') renderDashboard();
 }
 
-function saveState() {
-  try { localStorage.setItem('sy_fd12_state', JSON.stringify(S)); } catch(e) {}
+// ── SUPABASE SYNC ─────────────────────────────────────────────────────────────
+const SB_URL = 'https://vmzcwnzsyaeqvvwqhjjr.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZtemN3bnpzeWFlcXZ2d3FoampyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMzMTcyNjYsImV4cCI6MjA4ODg5MzI2Nn0.UD1FLFJ6xtn_D060zfEye1ekxMLGEyJFqTar04eFldY';
+let saveTimer = null;
+
+function setSyncStatus(status) {
+  // status: 'saving' | 'saved' | 'error' | 'loading'
+  const el = document.getElementById('sync-status');
+  if (!el) return;
+  const map = { saving:'⏳ SAVING...', saved:'✅ SYNCED', error:'🔴 SYNC ERROR', loading:'⏳ LOADING...' };
+  el.textContent = map[status] || '';
 }
 
-function loadState() {
+async function saveToSupabase() {
+  setSyncStatus('saving');
   try {
-    const saved = localStorage.getItem('sy_fd12_state');
-    if (!saved) return;
-    const d = JSON.parse(saved);
-    if (d.teams)              S.teams = d.teams;
-    if (d.fixtures)           S.fixtures = d.fixtures;
-    if (d.culturals)          S.culturals = d.culturals;
-    if (d.girlsrelay)         S.girlsrelay = d.girlsrelay;
-    if (d.culturalPerformer !== undefined) S.culturalPerformer = d.culturalPerformer;
-  } catch(e) {}
+    const res = await fetch(`${SB_URL}/rest/v1/fd12_state?id=eq.main`, {
+      method: 'PATCH',
+      headers: {
+        'apikey': SB_KEY,
+        'Authorization': `Bearer ${SB_KEY}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify({ data: S, updated_at: new Date().toISOString() })
+    });
+    if (!res.ok) throw new Error('save failed');
+    setSyncStatus('saved');
+    setTimeout(() => setSyncStatus(''), 2000);
+  } catch(e) {
+    setSyncStatus('error');
+  }
+}
+
+async function loadFromSupabase() {
+  setSyncStatus('loading');
+  try {
+    const res = await fetch(`${SB_URL}/rest/v1/fd12_state?id=eq.main&select=data`, {
+      headers: { 'apikey': SB_KEY, 'Authorization': `Bearer ${SB_KEY}` }
+    });
+    const rows = await res.json();
+    const d = rows[0]?.data;
+    if (d && Object.keys(d).length > 0) {
+      if (d.teams)                          S.teams = d.teams;
+      if (d.fixtures)                       S.fixtures = d.fixtures;
+      if (d.culturals)                      S.culturals = d.culturals;
+      if (d.girlsrelay)                     S.girlsrelay = d.girlsrelay;
+      if (d.culturalPerformer !== undefined) S.culturalPerformer = d.culturalPerformer;
+    }
+    setSyncStatus('saved');
+    setTimeout(() => setSyncStatus(''), 2000);
+  } catch(e) {
+    setSyncStatus('error');
+  }
+  renderAll();
+}
+
+function saveState() {
+  if (saveTimer) clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveToSupabase, 700);
 }
 
 function setW(key, fi, val) {
@@ -587,7 +633,7 @@ function resetAll() {
   S.girlsrelay=[null,null,null];
   S.culturalPerformer='';
   S.teams=['TEAM YELLOW','TEAM RED','TEAM PURPLE'];
-  saveState(); renderAll();
+  saveToSupabase(); renderAll();
 }
 function renderAll() {
   renderScoreboard();
@@ -595,8 +641,7 @@ function renderAll() {
   if (activeTab==='dashboard') renderDashboard();
 }
 
-loadState();
-renderAll();
+loadFromSupabase();
 </script>
 </body>
 </html>
