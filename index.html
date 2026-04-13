@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SY 12th Foundation Day · Scorekeeper</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --green: #1a4d1a;
+  --gold: #f5c518;
+  --dark: #111;
+  --border: rgba(255,255,255,0.1);
+  --T0: #f5c518;
+  --T1: #ef4444;
+  --T2: #a855f7;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background: var(--green);
+  background-image:
+    repeating-linear-gradient(90deg,rgba(255,255,255,0.015) 0 1px,transparent 1px 60px),
+    repeating-linear-gradient(0deg,rgba(255,255,255,0.015) 0 1px,transparent 1px 60px);
+  min-height:100vh;
+  font-family:'Barlow',sans-serif;
+  color:#fff;
+  padding-bottom:80px;
+}
+
+/* ── HEADER ── */
+header {
+  background:rgba(0,0,0,0.5);
+  border-bottom:2px solid var(--gold);
+  padding:12px 18px;
+  display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;
+}
+.brand { display:flex; align-items:center; gap:10px; }
+.brand-sq { background:#fff; color:#111; font-family:'Bebas Neue',sans-serif; font-size:12px; line-height:1.1; padding:5px 7px; letter-spacing:1px; }
+.brand-text .ev { font-family:'Bebas Neue',sans-serif; font-size:22px; letter-spacing:2px; color:var(--gold); line-height:1; }
+.brand-text .sub { font-family:'Barlow Condensed',sans-serif; font-size:9px; letter-spacing:3px; color:rgba(255,255,255,0.45); }
+.hdr-right { display:flex; align-items:center; gap:8px; }
+.live-tag { font-family:'Barlow Condensed',sans-serif; font-size:9px; letter-spacing:3px; color:rgba(255,255,255,0.38); text-align:right; line-height:1.5; }
+.live-tag strong { color:var(--gold); display:block; }
+.reset-btn {
+  background:rgba(255,60,60,0.12); border:1px solid rgba(255,80,80,0.25);
+  color:rgba(255,160,160,0.8); font-family:'Barlow Condensed',sans-serif;
+  font-size:11px; letter-spacing:2px; padding:6px 12px; border-radius:7px; cursor:pointer; transition:all .2s;
+}
+.reset-btn:hover { background:rgba(255,60,60,0.28); color:#ffa0a0; }
+
+/* ── TABS ── */
+.tabs {
+  display:flex; max-width:680px; margin:14px auto 0; padding:0 14px; gap:6px;
+}
+.tab-btn {
+  flex:1; font-family:'Bebas Neue',sans-serif; font-size:15px; letter-spacing:2px;
+  padding:10px 6px; border-radius:9px; border:1px solid rgba(255,255,255,0.12);
+  background:rgba(0,0,0,0.25); color:rgba(255,255,255,0.4); cursor:pointer; transition:all .25s; text-align:center;
+}
+.tab-btn:hover { background:rgba(255,255,255,0.08); color:rgba(255,255,255,0.7); }
+.tab-btn.active {
+  background:rgba(245,197,24,0.15); border-color:rgba(245,197,24,0.45); color:var(--gold);
+}
+
+/* ── SCOREBOARD ── */
+.scoreboard {
+  display:grid; grid-template-columns:repeat(3,1fr);
+  gap:10px; padding:14px 14px 0; max-width:680px; margin:0 auto;
+}
+.team-card {
+  background:rgba(0,0,0,0.35); border:2px solid rgba(255,255,255,0.08);
+  border-radius:13px; padding:12px 10px 14px; text-align:center;
+  position:relative; overflow:hidden; transition:border-color .3s;
+}
+.team-card::before { content:''; position:absolute; top:0;left:0;right:0;height:4px; }
+.tc0::before{background:var(--T0);} .tc1::before{background:var(--T1);} .tc2::before{background:var(--T2);}
+.team-card.leader { border-color:var(--gold); background:rgba(245,197,24,0.08); }
+.tname-inp {
+  background:transparent; border:none; border-bottom:1px dashed rgba(255,255,255,0.22);
+  color:#fff; font-family:'Bebas Neue',sans-serif; font-size:15px; letter-spacing:2px;
+  text-align:center; width:100%; outline:none; padding-bottom:3px; margin-bottom:7px;
+}
+.tname-inp::placeholder { color:rgba(255,255,255,0.22); }
+.ttotal { font-family:'Bebas Neue',sans-serif; font-size:48px; line-height:1; letter-spacing:-1px; }
+.tc0 .ttotal{color:var(--T0);} .tc1 .ttotal{color:#fca5a5;} .tc2 .ttotal{color:#d8b4fe;}
+.pts-lbl { font-family:'Barlow Condensed',sans-serif; font-size:9px; letter-spacing:3px; color:rgba(255,255,255,0.3); margin-top:2px; }
+.lead-badge { display:inline-block; background:var(--gold); color:var(--dark); font-family:'Bebas Neue',sans-serif; font-size:10px; letter-spacing:1px; padding:2px 8px; border-radius:20px; margin-top:4px; }
+
+/* ── SECTION HDR ── */
+.sec-hdr {
+  font-family:'Bebas Neue',sans-serif; font-size:12px; letter-spacing:4px; color:var(--gold);
+  padding:16px 14px 6px; max-width:680px; margin:0 auto;
+}
+.events-wrap { display:flex; flex-direction:column; gap:10px; padding:0 14px; max-width:680px; margin:0 auto; }
+
+/* ── EVENT CARD ── */
+.ev-card { background:rgba(0,0,0,0.28); border:1px solid var(--border); border-radius:12px; overflow:hidden; }
+.ev-hdr { display:flex; align-items:center; justify-content:space-between; padding:9px 14px; gap:8px; }
+.ev-title { font-family:'Bebas Neue',sans-serif; font-size:16px; letter-spacing:2px; }
+.ev-meta  { font-family:'Barlow Condensed',sans-serif; font-size:11px; color:rgba(255,255,255,0.4); letter-spacing:1px; }
+.ev-badge { font-family:'Barlow Condensed',sans-serif; font-size:11px; font-weight:700; letter-spacing:1px; padding:3px 10px; border-radius:20px; background:rgba(255,255,255,0.1); white-space:nowrap; }
+.ec-culturals   .ev-hdr{background:rgba(245,197,24,0.12);border-bottom:1px solid rgba(245,197,24,0.18);} .ec-culturals   .ev-title{color:var(--gold);}
+.ec-cricket     .ev-hdr{background:rgba(124,77,189,0.18);border-bottom:1px solid rgba(124,77,189,0.22);} .ec-cricket     .ev-title{color:#d8b4fe;}
+.ec-soccer      .ev-hdr{background:rgba(45,108,191,0.18);border-bottom:1px solid rgba(45,108,191,0.22);}  .ec-soccer      .ev-title{color:#bae6fd;}
+.ec-volley      .ev-hdr{background:rgba(217,79,140,0.18);border-bottom:1px solid rgba(217,79,140,0.22);} .ec-volley      .ev-title{color:#fbcfe8;}
+.ec-badminton   .ev-hdr{background:rgba(124,77,189,0.18);border-bottom:1px solid rgba(124,77,189,0.22);} .ec-badminton   .ev-title{color:#d8b4fe;}
+.ec-tabletennis .ev-hdr{background:rgba(122,191,61,0.18);border-bottom:1px solid rgba(122,191,61,0.22);}  .ec-tabletennis .ev-title{color:#bbf7d0;}
+.ec-girlsrelay  .ev-hdr{background:rgba(217,79,140,0.18);border-bottom:1px solid rgba(217,79,140,0.22);} .ec-girlsrelay  .ev-title{color:#fbcfe8;}
+
+/* ── FIXTURE ROW ── */
+.fix-row { padding:10px 14px; border-bottom:1px solid rgba(255,255,255,0.05); }
+.fix-row:last-child { border-bottom:none; }
+.fix-matchlbl { font-family:'Barlow Condensed',sans-serif; font-size:10px; letter-spacing:3px; color:rgba(255,255,255,0.28); margin-bottom:6px; }
+.fix-teams { display:flex; align-items:center; margin-bottom:8px; }
+.fix-team { flex:1; display:flex; align-items:center; gap:7px; font-family:'Barlow Condensed',sans-serif; font-size:13px; font-weight:700; letter-spacing:1px; }
+.fix-team.right { flex-direction:row-reverse; }
+.tdot { width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+.vs { font-family:'Bebas Neue',sans-serif; font-size:12px; letter-spacing:2px; color:rgba(255,255,255,0.2); padding:0 8px; }
+.win-btns { display:flex; gap:5px; }
+.win-btn {
+  flex:1; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1);
+  color:rgba(255,255,255,0.42); font-family:'Barlow Condensed',sans-serif;
+  font-size:11px; font-weight:700; letter-spacing:1px; padding:6px 4px;
+  border-radius:7px; cursor:pointer; transition:all .2s; text-align:center;
+}
+.win-btn:hover { background:rgba(255,255,255,0.13); color:#fff; }
+.win-btn.sel-0 { background:rgba(245,197,24,0.22); border-color:rgba(245,197,24,0.45); color:var(--T0); }
+.win-btn.sel-1 { background:rgba(239,68,68,0.22); border-color:rgba(239,68,68,0.45); color:#fca5a5; }
+.win-btn.sel-2 { background:rgba(168,85,247,0.22); border-color:rgba(168,85,247,0.45); color:#d8b4fe; }
+.draw-btn {
+  background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1);
+  color:rgba(255,255,255,0.28); font-family:'Barlow Condensed',sans-serif;
+  font-size:10px; font-weight:700; letter-spacing:1px; padding:6px 9px;
+  border-radius:7px; cursor:pointer; transition:all .2s; white-space:nowrap;
+}
+.draw-btn:hover { background:rgba(255,255,255,0.12); color:#fff; }
+.draw-btn.sel-draw { background:rgba(255,255,255,0.14); border-color:rgba(255,255,255,0.32); color:#fff; }
+.mom-row { display:flex; align-items:center; gap:8px; margin-top:7px; }
+.mom-lbl { font-family:'Barlow Condensed',sans-serif; font-size:10px; font-weight:700; letter-spacing:2px; color:var(--gold); white-space:nowrap; }
+.mom-inp {
+  flex:1; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1);
+  border-radius:6px; color:#fff; font-family:'Barlow Condensed',sans-serif;
+  font-size:13px; font-weight:600; letter-spacing:1px; padding:5px 10px; outline:none; transition:border-color .2s;
+}
+.mom-inp::placeholder { color:rgba(255,255,255,0.18); font-weight:400; }
+.mom-inp:focus { border-color:rgba(245,197,24,0.5); background:rgba(245,197,24,0.06); }
+.mom-inp.filled { border-color:rgba(245,197,24,0.32); }
+
+/* ── POSITION ROWS ── */
+.pos-rows { padding:10px 14px; display:flex; flex-direction:column; gap:8px; }
+.pos-row { display:flex; align-items:center; gap:10px; }
+.pos-name { font-family:'Barlow Condensed',sans-serif; font-size:14px; font-weight:700; letter-spacing:1px; flex:1; }
+.pos-btns { display:flex; gap:5px; }
+.pos-btn {
+  background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.1);
+  color:rgba(255,255,255,0.42); font-family:'Barlow Condensed',sans-serif;
+  font-size:12px; font-weight:700; letter-spacing:1px; padding:5px 10px;
+  border-radius:6px; cursor:pointer; transition:all .2s;
+}
+.pos-btn:hover { background:rgba(255,255,255,0.14); color:#fff; }
+.pos-btn.p1 { background:rgba(245,197,24,0.28); border-color:rgba(245,197,24,0.5); color:var(--gold); }
+.pos-btn.p2 { background:rgba(200,200,200,0.18); border-color:rgba(200,200,200,0.32); color:#e0e0e0; }
+.pos-btn.p3 { background:rgba(180,110,50,0.22); border-color:rgba(180,110,50,0.38); color:#ffcf9e; }
+.pos-pts { font-family:'Bebas Neue',sans-serif; font-size:18px; min-width:30px; text-align:right; color:rgba(255,255,255,0.2); }
+.pos-pts.has { color:var(--gold); }
+
+/* ── BOTTOM RESET ── */
+.bottom-reset { max-width:680px; margin:20px auto 0; padding:0 14px; }
+.bottom-reset .reset-btn { width:100%; padding:12px; font-size:13px; text-align:center; display:block; }
+
+/* ════════════════════════════════════════
+   DASHBOARD TAB
+════════════════════════════════════════ */
+.dash-wrap { max-width:680px; margin:0 auto; padding:0 14px; }
+
+/* Team leaderboard */
+.dash-section-title {
+  font-family:'Bebas Neue',sans-serif; font-size:13px; letter-spacing:4px; color:var(--gold);
+  padding:18px 0 8px;
+}
+
+.lb-team-row {
+  display:flex; align-items:center; gap:12px;
+  background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.08);
+  border-radius:12px; padding:14px 16px; margin-bottom:8px;
+  transition: all .3s;
+}
+.lb-team-row.rank-1 { border-color:rgba(245,197,24,0.45); background:rgba(245,197,24,0.07); }
+.lb-team-row.rank-2 { border-color:rgba(200,200,200,0.25); }
+.lb-team-row.rank-3 { border-color:rgba(180,110,50,0.25); }
+
+.lb-rank {
+  font-family:'Bebas Neue',sans-serif; font-size:28px; line-height:1;
+  min-width:32px; text-align:center;
+}
+.rank-1 .lb-rank { color:var(--gold); }
+.rank-2 .lb-rank { color:#ccc; }
+.rank-3 .lb-rank { color:#c87941; }
+
+.lb-team-dot { width:14px; height:14px; border-radius:50%; flex-shrink:0; }
+.lb-team-name { font-family:'Bebas Neue',sans-serif; font-size:20px; letter-spacing:2px; flex:1; }
+.lb-team-pts { text-align:right; }
+.lb-team-pts .big { font-family:'Bebas Neue',sans-serif; font-size:36px; line-height:1; color:var(--gold); }
+.lb-team-pts .lbl { font-family:'Barlow Condensed',sans-serif; font-size:10px; letter-spacing:2px; color:rgba(255,255,255,0.3); }
+
+/* Bar chart inside team row */
+.lb-bar-wrap { width:100%; margin-top:8px; }
+.lb-bar-bg { background:rgba(255,255,255,0.08); border-radius:4px; height:5px; width:100%; overflow:hidden; }
+.lb-bar-fill { height:5px; border-radius:4px; transition:width .6s ease; }
+
+/* Sport breakdown chips */
+.lb-breakdown { display:flex; flex-wrap:wrap; gap:5px; margin-top:8px; }
+.lb-chip {
+  font-family:'Barlow Condensed',sans-serif; font-size:10px; font-weight:700; letter-spacing:1px;
+  padding:2px 8px; border-radius:20px; background:rgba(255,255,255,0.08); color:rgba(255,255,255,0.5);
+}
+.lb-chip.scored { background:rgba(245,197,24,0.15); color:var(--gold); }
+
+/* MOM leaderboard */
+.mom-lb-row {
+  display:flex; align-items:center; gap:12px;
+  background:rgba(0,0,0,0.28); border:1px solid rgba(255,255,255,0.07);
+  border-radius:10px; padding:11px 14px; margin-bottom:7px;
+}
+.mom-lb-rank {
+  font-family:'Bebas Neue',sans-serif; font-size:22px; min-width:28px; text-align:center;
+  color:rgba(255,255,255,0.25);
+}
+.mom-lb-rank.top { color:var(--gold); }
+.mom-lb-name { font-family:'Barlow Condensed',sans-serif; font-size:15px; font-weight:700; letter-spacing:1px; flex:1; }
+.mom-lb-sports { font-family:'Barlow Condensed',sans-serif; font-size:10px; color:rgba(255,255,255,0.38); letter-spacing:1px; margin-top:1px; }
+.mom-lb-count {
+  font-family:'Bebas Neue',sans-serif; font-size:26px; color:var(--gold); line-height:1;
+  display:flex; flex-direction:column; align-items:center;
+}
+.mom-lb-count span { font-family:'Barlow Condensed',sans-serif; font-size:9px; letter-spacing:2px; color:rgba(255,255,255,0.3); line-height:1; margin-top:1px; }
+
+.empty-state {
+  font-family:'Barlow Condensed',sans-serif; font-size:13px; letter-spacing:2px;
+  color:rgba(255,255,255,0.25); text-align:center; padding:20px 0;
+}
+
+/* Star icon row */
+.star-row { display:flex; gap:3px; margin-top:4px; }
+.star { font-size:10px; opacity:0.35; }
+.star.lit { opacity:1; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="brand-sq">SQUARE<br>YARDS</div>
+    <div class="brand-text">
+      <div class="ev">12TH FOUNDATION DAY</div>
+      <div class="sub">PLAY WITH PASSION · WIN WITH TEAM SPIRIT</div>
+    </div>
+  </div>
+  <div class="hdr-right">
+    <div class="live-tag">LIVE<strong>SCORECARD</strong></div>
+    <button class="reset-btn" onclick="resetAll()">↺ RESET</button>
+  </div>
+</header>
+
+<!-- TABS -->
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab('scorer')" id="tab-scorer">⚽ SCOREKEEPER</button>
+  <button class="tab-btn" onclick="switchTab('dashboard')" id="tab-dashboard">🏆 DASHBOARD</button>
+</div>
+
+<!-- LIVE SCORE STRIP (always visible) -->
+<div id="scoreboard" class="scoreboard"></div>
+
+<!-- SCOREKEEPER TAB -->
+<div id="view-scorer">
+  <div id="app"></div>
+</div>
+
+<!-- DASHBOARD TAB -->
+<div id="view-dashboard" style="display:none">
+  <div class="dash-wrap" id="dash"></div>
+</div>
+
+<script>
+const S = {
+  teams: ['TEAM YELLOW', 'TEAM RED', 'TEAM PURPLE'],
+  fixtures: {
+    cricket:    [{w:null,mom:''},{w:null,mom:''},{w:null,mom:''}],
+    soccer:     [{w:null,mom:''},{w:null,mom:''},{w:null,mom:''}],
+    volley:     [{w:null,mom:''},{w:null,mom:''},{w:null,mom:''}],
+    badminton:  [{w:null,mom:''},{w:null,mom:''},{w:null,mom:''}],
+    tabletennis:[{w:null,mom:''},{w:null,mom:''},{w:null,mom:''}],
+  },
+  culturals:  [null,null,null],
+  girlsrelay: [null,null,null],
+  culturalPerformer: '',
+};
+
+const FIX_PAIRS   = [[0,1],[1,2],[0,2]];
+const FIX_LABELS  = ['Match 1','Match 2','Match 3'];
+const PTS         = {cricket:4,soccer:4,volley:4,badminton:3,tabletennis:3};
+const SPORT_NAMES = {cricket:'Cricket',soccer:'Soccer',volley:'Volleyball',badminton:'Badminton',tabletennis:'Table Tennis'};
+const C_PTS       = {1:15,2:10,3:5};
+const R_PTS       = {1:4,2:1,3:0};
+const TCOLORS     = ['#f5c518','#ef4444','#a855f7'];
+
+let activeTab = 'scorer';
+
+// ── TOTALS ──────────────────────────────────────────────────────────────────
+function totals() {
+  return [0,1,2].map(ti => {
+    let t = 0;
+    for (const [key,pts] of Object.entries(PTS))
+      S.fixtures[key].forEach(fx => { if (fx.w === ti) t += pts; });
+    t += C_PTS[S.culturals[ti]]  || 0;
+    t += R_PTS[S.girlsrelay[ti]] || 0;
+    return t;
+  });
+}
+
+function sportBreakdown(ti) {
+  const out = {};
+  for (const [key,pts] of Object.entries(PTS)) {
+    let p = 0;
+    S.fixtures[key].forEach(fx => { if (fx.w === ti) p += pts; });
+    out[key] = p;
+  }
+  out.culturals  = C_PTS[S.culturals[ti]]  || 0;
+  out.girlsrelay = R_PTS[S.girlsrelay[ti]] || 0;
+  return out;
+}
+
+// ── MOM AGGREGATION ─────────────────────────────────────────────────────────
+function momLeaderboard() {
+  const map = {}; // name -> {count, sports[]}
+  for (const [key, fxArr] of Object.entries(S.fixtures)) {
+    fxArr.forEach(fx => {
+      const name = (fx.mom||'').trim();
+      if (!name) return;
+      const n = name.toUpperCase();
+      if (!map[n]) map[n] = { name: n, count: 0, sports: [] };
+      map[n].count++;
+      map[n].sports.push(SPORT_NAMES[key]);
+    });
+  }
+  return Object.values(map).sort((a,b) => b.count - a.count);
+}
+
+// ── SCOREBOARD ──────────────────────────────────────────────────────────────
+function renderScoreboard() {
+  const tot = totals(), max = Math.max(...tot);
+  document.getElementById('scoreboard').innerHTML = [0,1,2].map(i => `
+    <div class="team-card tc${i} ${tot[i]===max&&max>0?'leader':''}">
+      <input class="tname-inp" value="${S.teams[i]}" placeholder="TEAM ${i+1}"
+        oninput="S.teams[${i}]=this.value;saveState();renderAll()">
+      <div class="ttotal">${tot[i]}</div>
+      <div class="pts-lbl">POINTS</div>
+      ${tot[i]===max&&max>0?'<div class="lead-badge">🏆 LEADING</div>':''}
+    </div>`).join('');
+}
+
+// ── SCORER HELPERS ───────────────────────────────────────────────────────────
+function tdot(i){ return `<span class="tdot" style="background:${TCOLORS[i]}"></span>`; }
+function tn(i)  { return S.teams[i]; }
+
+function fixBlock(key, fi) {
+  const fx = S.fixtures[key][fi];
+  const [a,b] = FIX_PAIRS[fi];
+  return `
+  <div class="fix-row">
+    <div class="fix-matchlbl">${FIX_LABELS[fi]}</div>
+    <div class="fix-teams">
+      <div class="fix-team">${tdot(a)}<span>${tn(a)}</span></div>
+      <div class="vs">VS</div>
+      <div class="fix-team right"><span>${tn(b)}</span>${tdot(b)}</div>
+    </div>
+    <div class="win-btns">
+      <button class="win-btn ${fx.w===a?'sel-'+a:''}" onclick="setW('${key}',${fi},${a})">${tn(a)} WIN</button>
+      <button class="draw-btn ${fx.w==='draw'?'sel-draw':''}" onclick="setW('${key}',${fi},'draw')">DRAW</button>
+      <button class="win-btn ${fx.w===b?'sel-'+b:''}" onclick="setW('${key}',${fi},${b})">${tn(b)} WIN</button>
+    </div>
+    <div class="mom-row">
+      <span class="mom-lbl">⭐ MOM</span>
+      <input class="mom-inp ${fx.mom?'filled':''}" placeholder="Man of the Match" value="${fx.mom}"
+        oninput="S.fixtures['${key}'][${fi}].mom=this.value;this.classList.toggle('filled',!!this.value);saveState();renderScoreboard()">
+    </div>
+  </div>`;
+}
+
+function sportCard(key, label, meta, pts) {
+  return `
+  <div class="ev-card ec-${key}">
+    <div class="ev-hdr">
+      <div><div class="ev-title">${label}</div><div class="ev-meta">${meta}</div></div>
+      <div class="ev-badge">${pts} PTS / WIN</div>
+    </div>
+    ${FIX_PAIRS.map((_,fi)=>fixBlock(key,fi)).join('')}
+  </div>`;
+}
+
+function posCard(stateKey, label, meta, ptsMap, badge) {
+  const rows = [0,1,2].map(i => {
+    const cur = S[stateKey][i], pts = ptsMap[cur]||0;
+    const btns = [1,2,3].map(p=>{
+      const lbl=p===1?'1st':p===2?'2nd':'3rd';
+      return `<button class="pos-btn ${cur===p?'p'+p:''}" onclick="setPos('${stateKey}',${i},${p})">${lbl}</button>`;
+    }).join('');
+    return `
+    <div class="pos-row">
+      ${tdot(i)}
+      <span class="pos-name">${tn(i)}</span>
+      <div class="pos-btns">${btns}</div>
+      <span class="pos-pts ${pts?'has':''}">${pts?'+'+pts:''}</span>
+    </div>`;
+  }).join('');
+  return `
+  <div class="ev-card ec-${stateKey}">
+    <div class="ev-hdr">
+      <div><div class="ev-title">${label}</div><div class="ev-meta">${meta}</div></div>
+      <div class="ev-badge">${badge}</div>
+    </div>
+    <div class="pos-rows">${rows}</div>
+  </div>`;
+}
+
+// ── RENDER SCORER ────────────────────────────────────────────────────────────
+function renderScorer() {
+  document.getElementById('app').innerHTML = `
+    <div class="sec-hdr">▸ CULTURALS</div>
+    <div class="events-wrap">
+      ${posCard('culturals','CULTURALS','Min. 10 participants · 15 mins max',C_PTS,'15 · 10 · 5 PTS')}
+      <div class="ev-card ec-culturals" style="overflow:hidden">
+        <div class="mom-row" style="padding:11px 14px">
+          <span class="mom-lbl">🎭 BEST PERFORMER</span>
+          <input class="mom-inp ${S.culturalPerformer?'filled':''}" placeholder="Best Cultural Performer" value="${S.culturalPerformer}"
+            oninput="S.culturalPerformer=this.value;this.classList.toggle('filled',!!this.value);saveState()">
+        </div>
+      </div>
+    </div>
+    <div class="sec-hdr">▸ SPORTS — ROUND ROBIN FIXTURES</div>
+    <div class="events-wrap">
+      ${sportCard('cricket','CRICKET','8 Players · 5 Overs',4)}
+      ${sportCard('soccer','SOCCER','6/7 Players · 20 Min Match',4)}
+      ${sportCard('volley','VOLLEYBALL','6 Players · 15 Pt 3 Sets',4)}
+      ${sportCard('badminton','BADMINTON','2 Players · 21 Pt 3 Sets',3)}
+      ${sportCard('tabletennis','TABLE TENNIS','2 Players · 21 Pt Set',3)}
+    </div>
+    <div class="sec-hdr">▸ GIRLS RELAY</div>
+    <div class="events-wrap">
+      ${posCard('girlsrelay','GIRLS RELAY','4 Players per team · 3 Teams format',R_PTS,'4 · 1 PTS')}
+    </div>
+    <div class="bottom-reset">
+      <button class="reset-btn" onclick="resetAll()">↺ RESET ALL SCORES</button>
+    </div>`;
+}
+
+// ── RENDER DASHBOARD ─────────────────────────────────────────────────────────
+function renderDashboard() {
+  const tot = totals();
+  const maxPts = Math.max(...tot, 1);
+
+  // Sort teams by score
+  const ranked = [0,1,2]
+    .map(i => ({ i, name: S.teams[i], pts: tot[i], color: TCOLORS[i], breakdown: sportBreakdown(i) }))
+    .sort((a,b) => b.pts - a.pts);
+
+  // Assign ranks (handle ties)
+  let rank = 1;
+  ranked.forEach((t,idx) => {
+    if (idx > 0 && t.pts < ranked[idx-1].pts) rank = idx+1;
+    t.rank = rank;
+  });
+
+  const rankEmoji = {1:'🥇',2:'🥈',3:'🥉'};
+  const rankClass = {1:'rank-1',2:'rank-2',3:'rank-3'};
+
+  const allSportKeys = [...Object.keys(PTS), 'culturals','girlsrelay'];
+  const sportLabels  = {...SPORT_NAMES, culturals:'Culturals', girlsrelay:'Girls Relay'};
+
+  const teamLB = ranked.map(t => {
+    const barPct = maxPts > 0 ? Math.round((t.pts/maxPts)*100) : 0;
+    const chips = allSportKeys.map(k => {
+      const p = t.breakdown[k] || 0;
+      return `<span class="lb-chip ${p>0?'scored':''}">${sportLabels[k]}${p>0?' +'+p:''}</span>`;
+    }).join('');
+    return `
+    <div class="lb-team-row ${rankClass[t.rank]}">
+      <div class="lb-rank">${rankEmoji[t.rank]||t.rank}</div>
+      <span class="lb-team-dot" style="background:${t.color}"></span>
+      <div style="flex:1">
+        <div class="lb-team-name">${t.name}</div>
+        <div class="lb-bar-wrap">
+          <div class="lb-bar-bg"><div class="lb-bar-fill" style="width:${barPct}%;background:${t.color}"></div></div>
+        </div>
+        <div class="lb-breakdown">${chips}</div>
+      </div>
+      <div class="lb-team-pts">
+        <div class="big">${t.pts}</div>
+        <div class="lbl">PTS</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // MOM leaderboard
+  const momList = momLeaderboard();
+  const momRows = momList.length === 0
+    ? `<div class="empty-state">No Man of Match entries yet</div>`
+    : momList.map((m, idx) => {
+        const stars = Array.from({length: Math.min(m.count,5)}, (_,si) => `<span class="star lit">⭐</span>`).join('');
+        return `
+        <div class="mom-lb-row">
+          <div class="mom-lb-rank ${idx===0?'top':''}">${idx+1}</div>
+          <div style="flex:1">
+            <div class="mom-lb-name">${m.name}</div>
+            <div class="mom-lb-sports">${m.sports.join(' · ')}</div>
+            <div class="star-row">${stars}</div>
+          </div>
+          <div class="mom-lb-count">
+            ${m.count}
+            <span>MOM WINS</span>
+          </div>
+        </div>`;
+      }).join('');
+
+  document.getElementById('dash').innerHTML = `
+    <div class="dash-section-title">▸ TEAM LEADERBOARD</div>
+    ${teamLB}
+    <div class="dash-section-title" style="padding-top:22px">▸ MAN OF THE MATCH — LEADERBOARD</div>
+    ${momRows}
+    <div class="dash-section-title" style="padding-top:22px">▸ BEST CULTURAL PERFORMER</div>
+    ${S.culturalPerformer.trim()
+      ? `<div class="mom-lb-row" style="border-color:rgba(245,197,24,0.3);background:rgba(245,197,24,0.06)">
+          <div class="mom-lb-rank top">🎭</div>
+          <div style="flex:1">
+            <div class="mom-lb-name">${S.culturalPerformer.trim().toUpperCase()}</div>
+            <div class="mom-lb-sports">Cultural Performance</div>
+          </div>
+          <div class="mom-lb-count" style="font-size:20px;color:var(--gold)">⭐<span>STAR</span></div>
+        </div>`
+      : `<div class="empty-state">No performer entered yet</div>`
+    }
+    <div style="height:20px"></div>
+  `;
+}
+
+// ── TABS ─────────────────────────────────────────────────────────────────────
+function switchTab(tab) {
+  activeTab = tab;
+  document.getElementById('view-scorer').style.display    = tab==='scorer'    ? '' : 'none';
+  document.getElementById('view-dashboard').style.display = tab==='dashboard' ? '' : 'none';
+  document.getElementById('tab-scorer').classList.toggle('active',    tab==='scorer');
+  document.getElementById('tab-dashboard').classList.toggle('active', tab==='dashboard');
+  if (tab==='dashboard') renderDashboard();
+}
+
+function saveState() {
+  try { localStorage.setItem('sy_fd12_state', JSON.stringify(S)); } catch(e) {}
+}
+
+function loadState() {
+  try {
+    const saved = localStorage.getItem('sy_fd12_state');
+    if (!saved) return;
+    const d = JSON.parse(saved);
+    if (d.teams)              S.teams = d.teams;
+    if (d.fixtures)           S.fixtures = d.fixtures;
+    if (d.culturals)          S.culturals = d.culturals;
+    if (d.girlsrelay)         S.girlsrelay = d.girlsrelay;
+    if (d.culturalPerformer !== undefined) S.culturalPerformer = d.culturalPerformer;
+  } catch(e) {}
+}
+
+function setW(key, fi, val) {
+  S.fixtures[key][fi].w = S.fixtures[key][fi].w === val ? null : val;
+  saveState(); renderAll();
+}
+function setPos(key, ti, pos) {
+  if (S[key][ti]===pos) { S[key][ti]=null; }
+  else { S[key]=S[key].map((v,i)=>(i!==ti&&v===pos)?null:v); S[key][ti]=pos; }
+  saveState(); renderAll();
+}
+function resetAll() {
+  if (!confirm('Reset ALL scores and results?')) return;
+  for (const k of Object.keys(S.fixtures))
+    S.fixtures[k]=[{w:null,mom:''},{w:null,mom:''},{w:null,mom:''}];
+  S.culturals=[null,null,null];
+  S.girlsrelay=[null,null,null];
+  S.culturalPerformer='';
+  S.teams=['TEAM YELLOW','TEAM RED','TEAM PURPLE'];
+  saveState(); renderAll();
+}
+function renderAll() {
+  renderScoreboard();
+  if (activeTab==='scorer')    renderScorer();
+  if (activeTab==='dashboard') renderDashboard();
+}
+
+loadState();
+renderAll();
+</script>
+</body>
+</html>
